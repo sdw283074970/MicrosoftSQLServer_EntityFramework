@@ -1,5 +1,6 @@
 # 本repository为学习ADO.NET中EntityFramework(与Microsoft SQL Server链接)的笔记(教程)
-#目录（持续更新）
+
+目录（持续更新）
 
 1.EF与SSMS简介
 
