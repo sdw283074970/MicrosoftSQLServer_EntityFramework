@@ -5,7 +5,7 @@
 
 //Q: 这个connectionStrings标签内容是自动生成的么？
 //A: 在DatabaseFirst Workflow中为自动生成，而CodeFirst Workflow中得手写，并且两者的标签内容有些许不同，主要集中在connectionString属性上。
-  DFW中自动生成的connectionStrings文本数据如下：
+  //DFW中自动生成的connectionStrings文本数据如下：
 
 <connectionStrings>
   <add name="DatabaseEntity" connectionString="metadata=res://*/xxx.csdl|res://*/xxx.ssdl|res://*/xxx.msl;provider=System.Data.SqlClient;
