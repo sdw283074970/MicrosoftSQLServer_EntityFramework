@@ -1,3 +1,6 @@
+//写在前面：这大概是DFW中比较难以理解的部分。在现有的教程几乎对更改数据库数据后ConceptualModel的变更没有做出明确的解释。在详细研究后，本文给出了最可能
+  //的解释，这涉及到EntityFramework的同步机制问题。在Q3和Q4有详细解释。
+
 //Q: 如何同步数据库中的更改到应用程序的模型中？
 //A: 在DatabaseFirst中应用程序模型随着数据库改变而改变。数据库本身涉及三种改变，即添加新内容、修改现存内容和删除内容，我们分别探讨。
   //1.新增内容。如添加一个新的表，首先在数据库中操作一通，添加了一个新的表。为了与数据库同步，在项目模型中的edmx视图中的空白处右键，点击“从数据库更新
@@ -12,9 +15,29 @@
   //的代码，即ConceptualModel，直接更改ConceptualModel并不会影响到数据库。ConceptualModel的作用是基于数据库提供一些可以在C#程序中调用的对象，这些对
   //象通过Mappings与StorageModel映射，而StorageModel又与数据库映射，从而达到在程序中连接/访问数据库的目的。
 
-//Q: 那如果在数据库中做出变更，ConceptualModel会自动更新吗？
-//A: 并不会自动更新，需要通过上述“从数据库更新模型(Update Model from Database)”程序同步。这里是一个很大的误区，即使用同步程序同步数据库与Conceptual-
-  //Model后ConceptualModel就会与StorageModel同步。实际情况并不完全是这样，有时候需要手动在ConceptualModel中修复一些异常，这些异常主要是由于同步机制
-  //造成。以下为同步机制：
-    //1.添加表/列时，
-  //2.更改表/列时，
+//Q: 那如果更改数据库中的表/列，ConceptualModel会自动更新吗？
+//A: 并不会自动更新，需要通过上述“从数据库更新模型(Update Model from Database)”程序同步。这里是一个很大的误区，初学者会自然的认为使用同步程序同步数据
+  //库与ConceptualModel后，ConceptualModel就会与StorageModel同步。实际情况并不完全是这样，有时候需要手动在ConceptualModel中修复一些“异常”，这些“异
+  //常”更像是某种保护机制，保护变更的对象在其他地方的引用不会失效。这些“异常”主要是由于同步机制造成。以下为同步机制/次序：
+    //1.在数据库中添加表/列时，首先数据库本身生成CREAT TABLE/COLUMN命令，其次将变化同步到StorageModel中，然后在ConceptualModel中新建表类/列属性，
+      //最后将ConceptualModel中新生成的类/属性与StorageModel映射，至此同步完成，没有“异常”产生；
+    //2.在数据库中更改表/列时，数据库会先执行删除原来的数据，然后再新建一个更改过后的项，再将这个新建的项同步到StorageModel中，StorageModel中的原项也
+      //被删除，同时原映射也被删除，然后在ConceptualModel中新建变更后的表类/列属性，最后将ConceptualModel中新生成的部分与StorageModel中新生成的部分
+      //映射，至此同步完成，但是ConceptualModel中的原项并没有被删除，抛出一个没有映射的“异常”，我们通常需要手动删除这些残留项，这样设计的目的是防止
+      //在程序的其他位置有对原项的引用，直接删除会破环程序完整性，强制我们手动更改或删除所有引用；
+    //3.在数据库中删除表/列时，首先数据库执行删除命令，然后SotageModel中对应项也被删除，继而映射也被删除，而整个删除过程中ConceptualModel将无任何变
+      //化，只是映射被删除后编译器会报错，此时我们需要手动删除ConceptualModel中的残留项并手动解决一系列引用缺失产生的错误。
+
+//Q: 如果更改数据库中列的数据属性，ConceptualModel会自动更新吗？
+//A: 不会，即使使用了同步程序后原ConceptualModel中的数据类型也不会改变。这同样是一种安全保护机制，放置数据类型更改后在程序其他地方的引用失效。
+  //如，在原数据库中某表中的某一列的数据类型是smallint，对应的在初始化后ConceptuakModel中映射的数据类型为Byte，这是可行且安全的；如果在数据库中将原
+  //smallint改成int，同步后会发现ConceptualModel中的映射项仍然为Byte，因为int的本质还是Byte，所以这仍然是安全可编译的；又如果在数据库中将原smallint
+  //改成varchar(500)，同步后编译器就会报错，指出varchar不能转换为Byte，提醒我们手动将Byte改为String，并手动处理可能出现的一系列后续引用问题。
+
+//作为小节，数据库在变更后必须通过同步程序(Sync Wizard)才能将变化同步到ConceptualModel中供程序调用，其中:
+  //1.添加表/列后ConceptualModel也将添加对应的对象并实现与StorageModel的映射；
+  //2.改变表/列后ConceptualModel将更改过程视为删除-新建过程，将遗留原对象并新增一个改后的对象，遗留对象需要被合理处理；
+  //3.删除表/列后ConceptualModel将遗留原对象，需要手动处理；
+  //4.改变表/列中的数据类型将无法同步至ConceptualModel，需要手动处理。
+
+//暂时想到这么多，最后更新2017/12/18
