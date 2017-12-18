@@ -34,10 +34,13 @@
   //smallint改成int，同步后会发现ConceptualModel中的映射项仍然为Byte，因为int的本质还是Byte，所以这仍然是安全可编译的；又如果在数据库中将原smallint
   //改成varchar(500)，同步后编译器就会报错，指出varchar不能转换为Byte，提醒我们手动将Byte改为String，并手动处理可能出现的一系列后续引用问题。
 
+//Q: 在对ConceptualModel经行调整后，如何才能知道是否正确映射？
+//A: 在edmx视图中右键，点击“Validate”即可验证。
+
 //作为小节，数据库在变更后必须通过同步程序(Sync Wizard)才能将变化同步到ConceptualModel中供程序调用，其中:
   //1.添加表/列后ConceptualModel也将添加对应的对象并实现与StorageModel的映射；
-  //2.改变表/列后ConceptualModel将更改过程视为删除-新建过程，将遗留原对象并新增一个改后的对象，遗留对象需要被合理处理；
-  //3.删除表/列后ConceptualModel将遗留原对象，需要手动处理；
+  //2.改变表/列后ConceptualModel将更改过程视为删除-新建过程，即保留原对象并新增一个改后的对象，遗留对象需要被合理处理；
+  //3.删除表/列后ConceptualModel将保留原对象，需要手动处理；
   //4.改变表/列中的数据类型将无法同步至ConceptualModel，需要手动处理。
 
 //暂时想到这么多，最后更新2017/12/18
