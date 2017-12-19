@@ -113,7 +113,79 @@ public partial class [MigrationName] : DbMigration
     }
 }
   
-  
+  //再了解了迁移类文件结构后我们来看以上课程-发起者-标签例子中的初始化迁移类代码：
+
+public partial class InitialModel : DbMigration   //这是我们在PM中自己设立的迁移类名称
+{
+    public override void Up()   //Up更新方法
+    {
+        //以下是建立Authors表的代码（EF自动生成）
+        CreateTable(
+            "dbo.Authors",
+            c => new
+                {
+                    Id = c.Int(nullable: false, identity: true),
+                    Name = c.String(),
+                })
+            .PrimaryKey(t => t.Id);
+      
+        //以下是建立Courses表的代码（EF自动生成）
+        CreateTable(
+            "dbo.Courses",
+            c => new
+                {
+                    Id = c.Int(nullable: false, identity: true),
+                    Title = c.String(),
+                    Description = c.String(),
+                    Level = c.Int(nullable: false),
+                    FullPrice = c.Single(nullable: false),
+                    Author_Id = c.Int(),
+                })
+            .PrimaryKey(t => t.Id)
+            .ForeignKey("dbo.Authors", t => t.Author_Id)
+            .Index(t => t.Author_Id);
+
+        //以下是建立Tags表的代码（EF自动生成）
+        CreateTable(
+            "dbo.Tags",
+            c => new
+                {
+                    Id = c.Int(nullable: false, identity: true),
+                    Name = c.String(),
+                })
+            .PrimaryKey(t => t.Id);
+
+        //由于以上表中存在多对多关系，以下为建立多对多关系的表的代码（自动生成）
+        CreateTable(
+            "dbo.TagCourses",
+            c => new
+                {
+                    Tag_Id = c.Int(nullable: false),
+                    Course_Id = c.Int(nullable: false),
+                })
+            .PrimaryKey(t => new { t.Tag_Id, t.Course_Id })
+            .ForeignKey("dbo.Tags", t => t.Tag_Id, cascadeDelete: true)
+            .ForeignKey("dbo.Courses", t => t.Course_Id, cascadeDelete: true)
+            .Index(t => t.Tag_Id)
+            .Index(t => t.Course_Id);
+
+    }
+
+    public override void Down()   //降级方法（自动生成）
+    {
+        //以下为Up方法的无脑方向执行
+        DropForeignKey("dbo.TagCourses", "Course_Id", "dbo.Courses");
+        DropForeignKey("dbo.TagCourses", "Tag_Id", "dbo.Tags");
+        DropForeignKey("dbo.Courses", "Author_Id", "dbo.Authors");
+        DropIndex("dbo.TagCourses", new[] { "Course_Id" });
+        DropIndex("dbo.TagCourses", new[] { "Tag_Id" });
+        DropIndex("dbo.Courses", new[] { "Author_Id" });
+        DropTable("dbo.TagCourses");
+        DropTable("dbo.Tags");
+        DropTable("dbo.Courses");
+        DropTable("dbo.Authors");
+    }
+}
 
 
 
