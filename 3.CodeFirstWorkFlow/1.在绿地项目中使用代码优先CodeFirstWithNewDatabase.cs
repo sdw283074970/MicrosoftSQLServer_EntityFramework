@@ -16,7 +16,7 @@
   //命令-Version:X.X.X获取对应版本的EF。
 
 //Q: 如何建立域和表/列？
-//A: 首先以类的形式建立表中的成员，一个类即声明了一种表的格式，然后让一个集合拥有这些类，即形成一个表，EF可以识别处并自动建立表关系。
+//A: 首先以类的形式建立表中的成员，一个类即声明了一种表的Model，然后让一个集合拥有这些类，即形成一个表，EF可以识别处并自动建立表关系。
   //本篇以一个课程数据为例，数据库有三个表和一个枚举类型：
   //1.表Course，储存课程信息；
   //2.表Author，储存本课发起人信息；
@@ -143,8 +143,8 @@ public partial class InitialModel : DbMigration   //这是我们在PM中自己�
                     Author_Id = c.Int(),
                 })
             .PrimaryKey(t => t.Id)
-            .ForeignKey("dbo.Authors", t => t.Author_Id)    //将Author列更名为Author_Id并设立一个指向Author
-            .Index(t => t.Author_Id);
+            .ForeignKey("dbo.Authors", t => t.Author_Id)    //将Author_Id列设为一个指向表Authors主键的外键
+            .Index(t => t.Author_Id);   //为此外键设立索引
 
         //以下是建立Tags表的代码（EF自动生成）
         CreateTable(
@@ -156,19 +156,19 @@ public partial class InitialModel : DbMigration   //这是我们在PM中自己�
                 })
             .PrimaryKey(t => t.Id);
 
-        //由于以上表中存在多对多关系，以下为建立多对多关系的表的代码（自动生成）
+        //由于以上表中存在多对多关系，所以应存在一个中间表。以下为建立多对多关系中间表的代码（自动生成）
         CreateTable(
-            "dbo.TagCourses",
+            "dbo.TagCourses",   //中间表的表名为两个表名的合体
             c => new
                 {
-                    Tag_Id = c.Int(nullable: false),
-                    Course_Id = c.Int(nullable: false),
+                    Tag_Id = c.Int(nullable: false),    //创建Tag_Id列
+                    Course_Id = c.Int(nullable: false),   //创建Course_Id列
                 })
-            .PrimaryKey(t => new { t.Tag_Id, t.Course_Id })
-            .ForeignKey("dbo.Tags", t => t.Tag_Id, cascadeDelete: true)
-            .ForeignKey("dbo.Courses", t => t.Course_Id, cascadeDelete: true)
-            .Index(t => t.Tag_Id)
-            .Index(t => t.Course_Id);
+            .PrimaryKey(t => new { t.Tag_Id, t.Course_Id })   //创建一个联合主键
+            .ForeignKey("dbo.Tags", t => t.Tag_Id, cascadeDelete: true)   //将列Tag_Id设为指向表Tags主键的外键
+            .ForeignKey("dbo.Courses", t => t.Course_Id, cascadeDelete: true)   //将列Course_Id设为指向表Courses主键的外键
+            .Index(t => t.Tag_Id)   //将列Tag_Id设为索引类型
+            .Index(t => t.Course_Id);   //将列Course_Id设为索引类型
 
     }
 
