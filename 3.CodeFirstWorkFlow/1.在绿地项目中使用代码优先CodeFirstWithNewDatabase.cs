@@ -4,7 +4,8 @@
   
   //前提1：安装EntityFramework。在PM中安装EntityFramework；
   //前提2：建立域。使用C#建立一个域(Domain)代表我们控制的数据库实体范围，并以集合以及类、字段的形式建立数据库中的表/列；
-  //前提3：启用迁移。在PM中启用Migration(迁移)，在项目中建立Migration文件夹；
+  //前提3：添加数据库连接。在App.Config中声明该解决方案连接的connectionStrings；
+  //前提4：启用迁移。在PM中启用Migration(迁移)，在项目中建立Migration文件夹；
   
   //同步步骤1：建立迁移类文件。在对程序代码做一个变动之后，在PM中使用命令建立迁移类；
   //同步步骤2：调整迁移类文件。按照实际情况对迁移类的Up和Down方法，即更新和还原方法进行编辑；
@@ -15,7 +16,7 @@
   //命令-Version:X.X.X获取对应版本的EF。
 
 //Q: 如何建立域和表/列？
-//A: 首先以类的形式建立表中的成员，一个类即声明了一种表的格式。然后让一个集合拥有这些类，即形成一个表，EF可以识别处并自动建立表关系。
+//A: 首先以类的形式建立表中的成员，一个类即声明了一种表的格式，然后让一个集合拥有这些类，即形成一个表，EF可以识别处并自动建立表关系。
   //本篇以一个课程数据为例，数据库有三个表和一个枚举类型：
   //1.表Course，储存课程信息；
   //2.表Author，储存本课发起人信息；
@@ -59,4 +60,39 @@ public enum CourseLevel   //枚举数据类型
     Advanced = 3
 }
   
-  //以上为表中的成员格式，以类的方式储存。
+  //以上为表中的成员格式，以类的方式储存。接下来就是在这些类的基础上建立表。建立表之前需要建立一个域指代数据库，之前DatabaseFirst中XXDbContext.cs
+  //就是其连接的数据库的域，在DFW中为EF自动生成，但在CFW中我们得手写。域是一个类，代码如下：
+
+public class PlutoContext : DbContext   //PlutoContext即域名，继承自DbContext
+{
+    //DbSet为一种集合泛型类，往集合中填充表成员类即可声明一个成员类对应的表
+    public DbSet<Course> Courses { get; set; }    //Courses表，成员(格式)为Course
+    public DbSet<Author> Authors { get; set; }    //Authors表，成员(格式)为Author
+    public DbSet<Tag> Tags { get; set; }    //Tags表，成员(格式)为Tag
+
+    public PlutoContext()   //构造器，继承DbContext构造器，参数为在App.Config中声明的所连接数据库的连接名，即connectionString的名字
+        : base("name=DefaultConnection")
+    {
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
