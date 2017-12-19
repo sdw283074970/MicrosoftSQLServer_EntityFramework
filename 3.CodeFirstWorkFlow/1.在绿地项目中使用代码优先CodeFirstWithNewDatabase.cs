@@ -5,7 +5,7 @@
   //前提1：安装EntityFramework。在PM中安装EntityFramework；
   //前提2：建立域。使用C#建立一个域(Domain)代表我们控制的数据库实体范围，并以集合以及类、字段的形式建立数据库中的表/列；
   //前提3：添加数据库连接。在App.Config中声明该解决方案连接的connectionStrings；
-  //前提4：启用迁移。在PM中启用Migration(迁移)，在项目中建立Migration文件夹；
+  //前提4：启用迁移。在PM中启用Migration(迁移)，在项目中建立Migration文件夹并初始化迁移；
   
   //同步步骤1：建立迁移类文件。在对程序代码做一个变动之后，在PM中使用命令建立迁移类；
   //同步步骤2：调整迁移类文件。按照实际情况对迁移类的Up和Down方法，即更新和还原方法进行编辑；
@@ -71,16 +71,49 @@ public class PlutoContext : DbContext   //PlutoContext即域名，继承自DbCon
     public DbSet<Tag> Tags { get; set; }    //Tags表，成员(格式)为Tag
 
     public PlutoContext()   //构造器，继承DbContext构造器，参数为在App.Config中声明的所连接数据库的连接名，即connectionString的名字
-        : base("name=DefaultConnection")
+        : base("name=DefaultConnection")    //如果connectionString的名字域域名想同，那么此参数可以省略
     {
 
     }
 }
 
+//Q: 如何手动设置App.Config中的connectionStrings？
+//A: 既然标签叫connectionStrings，那么肯定可以同时为这个项目解决方案连接多个服务器中的数据库。这里我们只手动添加一个，代码如下：
 
+<connectionStrings>
+  <add name="DefaultConnection" connectionString="data source=[SERVER NAME]; initial catalog=[PROJECT NAME]; 
+    integrated security=SSPI" providerName="System.Data.SqlClient" />
+</connectionStrings>
 
+  //与DatabaseFirstWorkflow自动生成的connectionString相比，手写的connectionString简介太多了。add属性主要也分为三个部分，也是简化后的三个部分：
+    //1.name属性。如果name与域名相同，则可以省略，EF会根据connectionString中自动推断。如果与域名不同则需要声明，且在域中的构造器也要做相同声明；
+    //2.connectionString属性。分为三个小部分：数据源(服务器名)、解决方案名(VS中的项目名)和服务器访问权限。SSPI指Windows访问权限；
+    //3.providerName属性。属性声明了谁来做识别工作(EntityFramework)。
+    
+//Q: 什么是Migration？如何启用和初始化Migration？
+//A: Migration即是迁移，指将VS中的C#代码翻译成SQL代码并在数据库中执行。打开PM，输入enable-migrations即可启用迁移，在整个项目开发过程中只用启用
+  //一次即可。启用成功后，我们可以在解决方案目录中看到新建的Migrations文件夹，这个文件夹将保存今后每一次的迁移记录，通过正确维护的迁移记录我们可以随时
+  //降级数据库版本或者回到之前某一时间点的数据库版本。
+  //初始化迁移指将4个同步前提做完后进行的第一次迁移，即在项目中第一次将C#代码转换为SQL生成数据库。打开PM，输入add-migration [MigrationName]即可生成
+  //一次迁移文件。第一次[MigrationName]统一保存为InitialModel，即完整输入add-migration InitialModel即生成一个时间戳+InitialModel的迁移文件，即
+  //一个迁移类，该文件结构如下：
+  
+public partial class [MigrationName] : DbMigration
+{
+    public override void Up()
+    {
+        //Up方法，即更新方法。EF将检测解决方案与数据的不同，然后自动生成一个Up方法，执行这个迁移类中的Up方法后数据库就会根据项目代码的变化而变化。
+        //我们也可以在这里植入一些Sql查询语句来对数据库进行操作。
+    }
 
-
+    public override void Down()
+    {
+        //Down方法，即还原/降级方法。此方法与Up方法无脑相反，即通过调用这个方法来将数据库还原到调用Up方法之前的状态，EF也会自动生成此方法代码。
+        //但是请切记，任何在Up方法做过变动后都要检查Down方法，千万要保持Down方法与所有Up方法无脑相反，否则数据库GG。
+    }
+}
+  
+  
 
 
 
