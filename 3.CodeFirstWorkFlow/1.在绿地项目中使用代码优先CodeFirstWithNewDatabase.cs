@@ -102,7 +102,7 @@ public partial class [MigrationName] : DbMigration
 {
     public override void Up()
     {
-        //Up方法，即更新方法。EF将检测解决方案与数据的不同，然后自动生成一个Up方法，执行这个迁移类中的Up方法后数据库就会根据项目代码的变化而变化。
+        //Up方法，即更新方法。EF将检测解决方案模型与数据的不同，然后基于模型与数据库的差异生成一个Up方法，执行后数据库就会根据项目代码的变化而变化。
         //我们也可以在这里植入一些Sql查询语句来对数据库进行操作。
     }
 
@@ -119,18 +119,19 @@ public partial class InitialModel : DbMigration   //这是我们在PM中自己�
 {
     public override void Up()   //Up更新方法
     {
+        //这一次初始化迁移建立了三张表，这是主要变化。EF在建立这三张表的同时发现了Courses表和Tags表中的多对多关系，于是EF还会新建一张关系表
         //以下是建立Authors表的代码（EF自动生成）
-        CreateTable(
-            "dbo.Authors",
-            c => new
+        CreateTable(    //CreatTable即新建表的方法，可以分析以下参数
+            "dbo.Authors",    //参数1即表名
+            c => new    //参数2即一个委托，此处传入一个符合委托格式的方法即可(用匿名方法)
                 {
-                    Id = c.Int(nullable: false, identity: true),
-                    Name = c.String(),
+                    Id = c.Int(nullable: false, identity: true),  //声明Id列及其数据类型、是否可空以及是否为自动Id
+                    Name = c.String(),    //声明Name列及其数据类型
                 })
-            .PrimaryKey(t => t.Id);
+            .PrimaryKey(t => t.Id);   //将Id列设为主键，这里的一切我们都可以按需更改
       
         //以下是建立Courses表的代码（EF自动生成）
-        CreateTable(
+        CreateTable(    //重复性的代码就不做赘述
             "dbo.Courses",
             c => new
                 {
@@ -142,7 +143,7 @@ public partial class InitialModel : DbMigration   //这是我们在PM中自己�
                     Author_Id = c.Int(),
                 })
             .PrimaryKey(t => t.Id)
-            .ForeignKey("dbo.Authors", t => t.Author_Id)
+            .ForeignKey("dbo.Authors", t => t.Author_Id)    //将Author列更名为Author_Id并设立一个指向Author
             .Index(t => t.Author_Id);
 
         //以下是建立Tags表的代码（EF自动生成）
@@ -173,7 +174,7 @@ public partial class InitialModel : DbMigration   //这是我们在PM中自己�
 
     public override void Down()   //降级方法（自动生成）
     {
-        //以下为Up方法的无脑方向执行
+        //以下为Up方法的无脑反向执行，请确保这一点
         DropForeignKey("dbo.TagCourses", "Course_Id", "dbo.Courses");
         DropForeignKey("dbo.TagCourses", "Tag_Id", "dbo.Tags");
         DropForeignKey("dbo.Courses", "Author_Id", "dbo.Authors");
