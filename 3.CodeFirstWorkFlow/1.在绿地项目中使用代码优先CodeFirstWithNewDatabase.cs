@@ -103,7 +103,7 @@ public partial class [MigrationName] : DbMigration
 {
     public override void Up()
     {
-        //Up方法，即更新方法。EF将检测解决方案模型与数据的不同，然后基于模型与数据库的差异生成一个Up方法，执行后数据库就会根据项目代码的变化而变化。
+        //Up方法，即更新方法。EF会比较现有Model与之前的迁移文件，然后基于它们的差异生成一个Up方法，执行后EF会将Up方法翻译成Sql文件并让数据库执行。
         //我们也可以在这里植入一些Sql查询语句来对数据库进行操作。
     }
 
