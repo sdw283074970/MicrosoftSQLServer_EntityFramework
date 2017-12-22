@@ -80,6 +80,56 @@ public partial class AddCategoriesTable : DbMigration   //AddCategoriesTable即�
   //2.以数据库为中心命名(DatabaseCentric)。格式为:[行为动词]+[对象表]，如此例中的AddCategoryTable。
 
 //Q: 哪一种命名方法好？
-//A: 我们采用CodeFirst，理论上应该用以模型为中心的命名方式，但是第二种适用性更广。在有些情况下，我们需要对数据库做出的变动在Model中并没有具体的表现。
+//A: 既然采用CodeFirst，理论上应该用以模型为中心的命名方式，但是第二种适用性更广。在有些情况下，我们需要对数据库做出的变动在Model中并没有具体的表现。
   //如，当我们想建立一个触发器或更改一个储存过程、视图的时候，这些操作在Model中并没有具体体现，因此很难用ModelCentric命名。所以统一用DatabaseCentric
   //比较稳妥，但也需要知道ModelCentric，毕竟肯定有其他程序员这么写。
+
+//Q: 如果需要向已经存在的表添加新的列该如何操作？
+//A: 首先在Model中对应类中修改添加我们要的字段，然后执行迁移三步骤即可。但是需要注意的是，在已有表值中添加新的列，一定要确保该列数据类型为可空类型，
+  //否则会抛出异常。即使我们不想让该列为可空类型，我们可以先设定可空，然后填充如数据，再改成不可空即可。或者一开始就填入一些没有意义的数据，再做更改。
+  //如此例中，我们向Courses列表中添加一个Category列，需要首先在Course类中添加Category字段，如：
+
+public partial class Course
+{
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+    public Course()
+    {
+        Tags = new HashSet<Tag>();
+    }
+
+    public Category Category { get; set; }      //添加一个新字段Category
+    public int Id { get; set; }
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public int Level { get; set; }
+    public float FullPrice { get; set; }
+    public int? Author_Id { get; set; }
+    public virtual Author Authors { get; set; }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2227:CollectionPropertiesShouldBeReadOnly")]
+    public virtual ICollection<Tag> Tags { get; set; }
+}
+  
+  //然后在PM中键入新建迁移文件命令: add-migration AddCategoryColumnToCoursesTable，生成以下迁移文件：
+
+public partial class AddCategoryColumnToCoursesTable : DbMigration
+{
+    public override void Up()
+    {
+        AddColumn("dbo.Courses", "Category_Id", c => c.Int(nullable: true));//此处Category_Id因手动改为可空，如需要可在填充后的Up方法改回
+        CreateIndex("dbo.Courses", "Category_Id");    //将这个带Id的列设为索引
+        AddForeignKey("dbo.Courses", "Category_Id", "dbo.Categories", "Id");//建立指向Catrgories表Id的外键，两者为一对一关系
+        Sql("UPDATE Courses SET Category_Id = 1");  //执行Sql语句，将所有Category_Id列设为1，如此列非可空，则这一步为必须
+    }
+
+    public override void Down()
+    {
+        DropForeignKey("dbo.Courses", "Category_Id", "dbo.Categories");
+        DropIndex("dbo.Courses", new[] { "Category_Id" });
+        DropColumn("dbo.Courses", "Category_Id");
+    }
+}
+
+  //最后使用PM中的updat-database命令即可完成数据库与Model的同步更新。
+  
+//暂时想到这么多，最后更新2017/12/22
