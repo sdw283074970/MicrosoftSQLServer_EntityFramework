@@ -16,8 +16,9 @@
   //2.在PM中使用参数命令update-database -TargetMigration:MigrationName, 在这里即update-database -TargetMigration:F.
 
 //第二种方法的原理为，EF会对比目标时间点和当前时间点，然后会反向执行目标时间点后所有迁移文件的Down方法，之后让整个Model处于刚刚执行完目标时间点迁移
-  //文件的状态。如，目标时间点(目标版本)为迁移文件F，当前迁移文件为H，在我们键入PM参数命令回到F时间点后，EF会按顺序执行迁移文件H，G的Down方法，让整
-  //Model和数据库回到刚刚执行完迁移文件F的状态。此时迁移文件G和H仍然存在，如果想返回最后时间点，则只需在PM中键入update-database即可返回。
+  //文件的状态。如，目标时间点(目标版本)为迁移文件F，当前迁移文件为H，在我们键入PM参数命令回到F时间点后，EF会按顺序执行迁移文件H，G的Down方法，让整个
+  //Model和数据库回到刚刚执行完迁移文件F的状态。此时迁移文件G和H仍然存在，但EF无法识别，如果想返回最新版本，只用在PM中键入update-database，EF就会自动
+  //执行F以后所有的迁移文件，即回到最新版本。
 
 //注意，在结束数据降级相关工作后，一定要执行一次update-database命令返回最新版本，否则EF是认不出旧版本到新版本之间的迁移文件的，即不可以连续执行类似于
   //update-database -TargetMigration:F/ update-database -TargetMigration:G这种操作，因为在执行回到F后，EF并不知道G的存在。如果是想恢复到犯错之前
