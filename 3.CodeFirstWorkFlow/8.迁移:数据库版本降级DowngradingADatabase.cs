@@ -13,7 +13,7 @@
 
 //第二种，如果只能在现有数据库的基础上对其进行降级，跟随以下步骤：
   //1.找到目标时间点数据库迁移文件，如该文件名称为F；
-  //2.在PM中使用参数命令update-database -TargetMigration:[MigrationName], 在这里即update-database -TargetMigration:F.
+  //2.在PM中使用参数命令update-database -TargetMigration:[TargetMigrationName], 在这里即update-database -TargetMigration:F.
 
 //第二种方法的原理为，EF会对比目标时间点和当前时间点，然后会反向执行目标时间点后所有迁移文件的Down方法，之后让整个Model处于刚刚执行完目标时间点迁移
   //文件的状态。如，目标时间点(目标版本)为迁移文件F，当前迁移文件为H，在我们键入PM参数命令回到F时间点后，EF会按顺序执行迁移文件H，G的Down方法，让整个
