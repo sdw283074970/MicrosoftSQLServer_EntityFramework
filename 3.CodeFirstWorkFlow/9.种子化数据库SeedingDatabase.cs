@@ -39,46 +39,22 @@
 
     DbSet<T>.AddOrUpdate(Expression<Func<T, Object>> identifierExpression, params T[] entities);
 
-  //可以看到，这个方法要求两个参数，一个是identifierExpression，用来识别添加或者更新；另一个是entities，即该列中的数据。可以看到这里有一个参数类型为
-    //Expression<TDelegate>,即identifierExpression可以是一个委托，也可以是一个委托列表，即可以同时在AddOrUpdate()方法中对多个表列进行识别。
+  //可以看到，这个方法要求两个参数，一个是identifierExpression，Func委托返回一个Object，判定该Object是否存在，如果存在，则Add，否则Update；另一个
+    //参数是entities，类型为数列，即种子数据本身。
     //这里以为Authors列表中添加作者为例：
 
         protected override void Seed(CodeFirstExistingDb.PlutoContext context)    //参数context为当前的PlutoContext
         {
-            context.Authors.AddOrUpdate(a => a.Name, //第一个参数，匿名表达式声明识别目标是表Authors中的Name，如果存在Name，则更新，否则添加
-                new Author
+            context.Authors.AddOrUpdate(a => a.Name, //第一个参数，检查Author表中的Name是否为存在，如果Name为不存在，则认为这是个空表，参数2将会
+                                        //以添加的方式写入数据库，否则参数2以更新的方式写入数据库
+                new Author  //第二个参数为一个数列，这里为Author[]数列，我们在这里写入具体的表内容，即为表Author写入种子数据
                 {
-                    Name = "SDW",
+                    Name = "SDW",   //Author类的两个字段，一个是Name，一个是Courses
                     Courses = new Collection<Course>()
                     {
                         new Course() { Name = "Xamarin", Description = "Nothing"}
                     }
                 });
-        }
+        }//这样每一次执行update-database命令后，EF会自动执行这个种子方法，赋予数据库一些种子数据，每Update一次将恢复一次种子数据
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//暂时想到这么多，最后更新2118/01/03
