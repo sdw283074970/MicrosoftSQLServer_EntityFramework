@@ -16,7 +16,7 @@
 /* update-database -TargetMigration:[TargetMigrationName] */
 
 /*6.将所有迁移文件转化为Sql文件*/
-/* Update-Database	-Script	-SourceMigration:0 */
+/* Update-Database -Script -SourceMigration:0 */
 
 /*7.将目标范围迁移文件转化为Sql文件*/
-/* Update-Database	-Script	-SourceMigration:[Migr1]	-TargetMigration:[Migr2] */
+/* Update-Database -Script -SourceMigration:[Migr1] -TargetMigration:[Migr2] */
