@@ -22,19 +22,14 @@ namespace DataAnnotations
         //以下为表中的列及列的数据类型，以字段的形式储存
         public int Id { get; set; }   //Id列，之后EF会自动将此列作为主键，也可修改，会详细讨论
 
-        [Required]
-        [MaxLength(255)]
         public string Title { get; set; }   //Title列，数据类型为string，这里指课程名
 
-        [Required]
-        [MaxLength(2000)]
         public string Description { get; set; }   //Description列，数据类型为string，这里指课程的描述
 
         public CourseLevel Level { get; set; }    //Level列，数据类型为CourseLevel枚举类型
 
         public float FullPrice { get; set; }    //FullPrice列，数据类型为float
 
-        [ForeignKey("Author")]
         public int AuthorId { get; set; }
 
         public Author Author { get; set; }    //Author列，数据类型为Author，EF会自动将此列视为指向Author的外键(一对一或多对一)，之后会详细讨论
@@ -78,3 +73,67 @@ namespace DataAnnotations
         }
     }
 }
+
+  //其中，我们已经初始化了迁移并建立了数据库。我们可以看到，在Model转换成数据库的过程中EF使用了默认约定。如表Courses中Title、Decription的数据类型
+    //在Model中为String，在数据库中就为nvarchar(MAX)，且都允许为空；表Courses的一个指向表Authors的外键也允许为空，且名字为Author_Id。
+
+  //若项目需求为：
+    //1.将Title的长度改为255；
+    //2.将Description的长度改为2000；
+    //3.不允许Title和Description出现空值；
+    //4.将表Courses中指向表AUthors的外键命名为AuthorId且不能为空。
+  //我们可以使用数据注解复写约定来满足项目需求。代码如下：
+
+    public class Course
+    {
+
+        public int Id { get; set; }   
+
+        [Required]    //复写约定，将Title在数据库中设为不可空
+        [MaxLength(255)]    //复写约定，将Title在数据库中的数据类型设为MaxLength(255)
+        public string Title { get; set; }   
+
+        [Required]    //复写约定，将Description在数据库中设为不可空
+        [MaxLength(2000)]   //复写约定，将Description在数据库中的数据类型设为MaxLength(2000)
+        public string Description { get; set; }   
+      
+        public CourseLevel Level { get; set; } 
+      
+        public float FullPrice { get; set; }   
+
+        [Required]    //复写约定，将该外键在数据库中设为不可空
+        [ForeignKey("Author")]    //将该字段设为指向Authors表中Author的外键
+        public int AuthorId { get; set; }   //建立一个名为AuthorId的字段
+
+        public Author Author { get; set; }    
+
+        public IList<Tag> Tags { get; set; }    
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
