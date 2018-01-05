@@ -101,13 +101,26 @@ namespace DataAnnotations
       
         public float FullPrice { get; set; }   
 
-        [Required]    //复写约定，将该外键在数据库中设为不可空
-        [ForeignKey("Author")]    //将该字段设为指向Authors表中Author的外键
+        [ForeignKey("Author")]    //将该字段设为指向Authors表中Author的外键，因为int类型本来就不能为空，所以数据库中也不能为空
         public int AuthorId { get; set; }   //建立一个名为AuthorId的字段
 
         public Author Author { get; set; }    
 
         public IList<Tag> Tags { get; set; }    
     }
+
+//Q: 数据注解有没有什么限制或缺点？
+//A: 有。一个缺点是数据注解无法自动随引用的名字的变更而变更，若一个引用名字改变，则该注解将失效。如
+
+    public class Course
+    {
+        [ForeignKey("Author")]    //“Author”与字段Author连接，若字段Author更名，该注解将不会跟着更改。后果是抛出异常，复写失败。
+        public int AuthorId { get; set; }
+
+        public Author Author { get; set; } 
+    }
+
+    //另一个缺点是，数据注解无法复写有关于中间表的约定。如Courses表和Tags表为多对多关系，会生成一个中间表，默认约定该中间表的名字为TagCourses。
+      //若我们想复写这个约定，那么只能用FluentAPI。
 
 //暂时想到这么多，最后更新2018/01/05
