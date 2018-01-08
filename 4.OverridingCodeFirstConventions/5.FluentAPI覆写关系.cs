@@ -22,11 +22,47 @@
   modelBuilder.Entity<Author> //获得起点类Author的引用
               .HasMany(a => a.Courses)    //一个Author有多个Course，这里的Courses为AuThor类本身声明的类型为ICollection<Course>的字段
               .WithRequired(c => c.Author)    //一个Course只能有一个Author
-              .HasForeignKey(c => c.AuthorId)   //可以可选择的调用覆写外键的方法，即指定Course类中的AuthorId字段为外键
+              .HasForeignKey(c => c.AuthorId);   //可以可选择的调用覆写外键的方法，即覆写Course类中的AuthorId字段为外键(AuthorId必须存在Course类)
     
     //反过来如果将Course定为起点类，则有以下同效代码：
     
   ModelBilder.Entity<Course>    //获得起点类Course的引用
              .HasRequired(c => Author)    //一个Course只能有一个Author
              .WithMany(a => Courses)    //一个Author有多个Course
-             .HasForeignKey(c => AuthorId)    //指定Course类中的AuthorId字段为外键
+             .HasForeignKey(c => AuthorId);    //覆写Course类中的AuthorId字段为外键
+
+  //2.覆写多对多关系
+    //如Course和Tag就为多对多关系，即一个Course可以有很多Tag，且Tag可以给很多Course贴。用FluentAPI覆写这个关系代码如下：
+    
+  modelBuilder.Entity<Course>   //获得起点类Course的引用
+              .HasMany(c => c.Tags)   //一个Course有很多Tags
+              .WithMany(t => t.Courses)   //一个Tag有很多Courses
+              .Map(m => m.ToTable("CourseTags"));   //多对多关系会生成中间表，调用Map()方法可以覆写中间表的属性，如通过ToTable()方法覆写中间表名
+    
+    //反过来一样一样的，不作赘述
+
+  //3.覆写一对一/零关系
+    //如Course和Caption就为一对一/零关系，即Course可能有一个Caption或可能没有，而Caption一定有一个Course。用FluentAPI覆写这个关系代码如下：
+
+  modelBuilder.Entity<Course>   //获得起点类Course的引用
+              .HasOptional(c => c.Caption)    //一个Course可能有一个Caption也可能没有
+              .WithRequired(c => c.Course);   //一个Caption有且仅有一个Course
+  
+    //反之亦然。一对一/零关系有一个特殊的情况，即一对一关系。如Course和Cover就为一对一关系，他们都有且仅有一个对方。但是首先需要确定哪一个是父母，哪
+      //一个是子女？有Course才会有Cover，所以Course是父母，在EF中表述为Principle，子女Cover则表述为Dependent。但是EF不知道哪一个是Principle，哪
+      //一个是Dependent。我们通过在返回的时候调用WithRequiredPrinciple()方法或WithRequiredDependent()方法来告诉EntityFramework。
+
+    //如果从Principle出发(即选父母为起点类)，则返回的时候应调用WithRequiredPrinciple()方法，反之调用WithRequiredDependent()方法。
+    //用FluentAPI覆写特殊一对一关系代码如下：
+
+  modelBuilder.Entity<Course>
+              .HasRequired(c => c.Cover)    //一个Course只有一个Cover
+              .WithRequiredPrinciple(c => c.Course);  //一个Cover只有一个Course，Course为父母且为起始类，所以调用WithRequiredPrinciple()
+              
+    //反过来以Dependent为起始类，则有以下代码：
+
+  modelBuilder.Entity<Cover>
+              .HasRequired(c => c.Course)   //一个Cover只有一个Course
+              .WithRequiredDependent(c => c.Cover);  //一个Course只有一个Cover，Cover为子女且为起始类，所以调用WithRequiredDependent()方法
+              
+//暂时想到这么多，最后更新2018/01/08
