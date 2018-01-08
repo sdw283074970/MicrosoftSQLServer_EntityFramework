@@ -87,14 +87,39 @@
 
   protected override void OnModelCreating(DbModelBuilder modelBuilder)
   {
-      //默认约定： 
-      modelBuilder.Entity<Course>()
-                  .Property(t => t.Name)    //选定Course类中的Name属性作为对象
-                  .HasColumnName("sName");    //复写：将列名复写为"sName"
+      //默认约定：若主键被定义为Identify，没新增一个条目，则数据库自动生成新主键(值为上一条目主键值+1)
+      modelBuilder.Entity<Book>()
+                  .Property(t => t.ISBN)    //选定Book类中的ISBN属性作为对象(ISBN为主键)
+                  .HasDatabaseGeneratedOption(DatabaseGeneratedOption.None);    //复写：关闭自动生成主键值
+                //.HasDatabaseGeneratedOption(DatabaseGeneratedOption.Computed);    //复写：将数据库主键自动生成选项复写为组合(来自其他列)
+                //.HasDatabaseGeneratedOption(DatabaseGeneratedOption.Identify);    //复写：打开数据库主键值自动生成  (值为上一条目主键值+1)  
       base.OnModelCreating(modelBuilder);
   }
 
+  //8.复写可空类型
 
+  protected override void OnModelCreating(DbModelBuilder modelBuilder)
+  {
+      //默认约定： 若C#中字段为可空，则数据库中也为可空
+      modelBuilder.Entity<Course>()
+                  .Property(t => t.Name)    //选定Course类中的Name属性作为对象
+                  .IsRequired().    //复写：将该列复写为不可空
+      base.OnModelCreating(modelBuilder);
+  }
 
+  //9.复写字符串长度
 
+  protected override void OnModelCreating(DbModelBuilder modelBuilder)
+  {
+      //默认约定： String类对应nvarchar(MAX)
+      modelBuilder.Entity<Course>()
+                  .Property(t => t.Name)    //选定Course类中的Name属性作为对象
+                  .HasMaxLength(255);    //复写：将该列的长度最大值复写为255
+      
+      modelBuilder.Entity<Course>()
+                  .Property(t => t.Description)    //选定Course类中的Description属性作为对象
+                  .IsMaxLength();    //复写：将该列的长度复写为最大值 
+      base.OnModelCreating(modelBuilder);
+  }
 
+//暂时想到这么多，最后更新2018/1/8
