@@ -116,7 +116,7 @@ namespace FluentAPI
                         Tag_Id = c.Int(nullable: false),
                         Course_Id = c.Int(nullable: false),
                     })
-                .PrimaryKey(t => new { t.Tag_Id, t.Course_Id })
+                .PrimaryKey(t => new { t.Tag_Id, t.Course_Id })     //默认约定外键名也有下划线
                 .ForeignKey("dbo.Tags", t => t.Tag_Id, cascadeDelete: true)   //连带删除为开
                 .ForeignKey("dbo.Courses", t => t.Course_Id, cascadeDelete: true)
                 .Index(t => t.Tag_Id)
@@ -143,7 +143,7 @@ namespace FluentAPI
     //1.将Title属性设为非空且长度限制为255；
     //2.将Description属性设为非空且长度限制为2000；
     //3.重新配置Author与Courses的关系，将外键命名为AuthorId而不是默认的Author_Id，并且关闭连带删除；
-    //4.将Courses与Tags的中间表命名为“CourseTags”而不是默认的“TagCourses”；
+    //4.将Courses与Tags的中间表命名为“CourseTags”而不是默认的“TagCourses”，并拿掉这个中间表外键中的下划线；
     //5.建立一个新类Cover，并赋予Cover与Couse一个一对一关系；
 
   //我们只能使用FluentAPI来满足以上需求。由于本次项目是CodeFirseWorkflow，所以要注意“一次小改变就做一次迁移”的黄金原则，即每完成一条需求，就做
@@ -219,8 +219,46 @@ namespace FluentAPI
         }
     }
     
-  //同步至数据库后可以开始第四条需求。
+  //同步至数据库后可以开始第四条需求，即更改Tags和Courses的中间表名。Tag和Course为多对多关系，生成的中间表名在EF中默认约定为TagCourses，我们可以
+    //通过F论坛API将其覆写为CourseTags，代码如下：
 
+            //续写在OnModelCreating方法中，此处省略
+            modelBuilder.Entity<Course>()       //选择Course为起始类
+                .HasMany(c => c.Tags)       //一个Course有很多Tag
+                .WithMany(t => t.Courses)       //一个Tage有很多Course
+                .Map(m =>       //调用Map方法，其参数为一个Action<ManyToManyAssociationMappingConfiguration>委托
+                    {       //ManyToManyAssociationMappingConfiguration类中有4个方法，这里我们用到其中三个
+                        m.ToTable("CourseTags");   //有ToTable(string tableName)和ToTable(string tableName string schemeName)两个重载
+                        m.MapLeftKey("CourseId");   //MapLeftKey(string[] keyColumnNames)支持为多个外键命名，LeftKey即起始类(Course)的外键
+                        m.MapRightKey("TagId");     //MapRightKey(string[] keyColumnNames)支持为多个外键命名，RightKey即终点类(Tag)的外键
+                    });
+
+  //在PM中键入 add-migration AlterMapName 建立新迁移文件，生成代码如下：
+
+    public partial class AlterMapNameAndTableColumnName : DbMigration
+    {
+        public override void Up()
+        {
+            RenameTable(name: "dbo.TagCourses", newName: "CourseTags");   //覆写中表名
+            RenameColumn(table: "dbo.CourseTags", name: "Tag_Id", newName: "TagId");    //覆写列名
+            RenameColumn(table: "dbo.CourseTags", name: "Course_Id", newName: "CourseId");    //覆写列名
+            RenameIndex(table: "dbo.CourseTags", name: "IX_Course_Id", newName: "IX_CourseId");   //覆写索引器名
+            RenameIndex(table: "dbo.CourseTags", name: "IX_Tag_Id", newName: "IX_TagId");   //覆写索引器名
+            DropPrimaryKey("dbo.CourseTags");   //删除旧主键
+            AddPrimaryKey("dbo.CourseTags", new[] { "CourseId", "TagId" });   //将覆写后的列设为主键
+        }
+        
+        public override void Down()
+        {
+            DropPrimaryKey("dbo.CourseTags");
+            AddPrimaryKey("dbo.CourseTags", new[] { "Tag_Id", "Course_Id" });
+            RenameIndex(table: "dbo.CourseTags", name: "IX_TagId", newName: "IX_Tag_Id");
+            RenameIndex(table: "dbo.CourseTags", name: "IX_CourseId", newName: "IX_Course_Id");
+            RenameColumn(table: "dbo.CourseTags", name: "CourseId", newName: "Course_Id");
+            RenameColumn(table: "dbo.CourseTags", name: "TagId", newName: "Tag_Id");
+            RenameTable(name: "dbo.CourseTags", newName: "TagCourses");
+        }
+    }
 
 
 
