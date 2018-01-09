@@ -245,7 +245,7 @@ namespace FluentAPI
             RenameIndex(table: "dbo.CourseTags", name: "IX_Course_Id", newName: "IX_CourseId");   //覆写索引器名
             RenameIndex(table: "dbo.CourseTags", name: "IX_Tag_Id", newName: "IX_TagId");   //覆写索引器名
             DropPrimaryKey("dbo.CourseTags");   //删除旧主键
-            AddPrimaryKey("dbo.CourseTags", new[] { "CourseId", "TagId" });   //将覆写后的列设为主键
+            AddPrimaryKey("dbo.CourseTags", new[] { "CourseId", "TagId" });   //将覆写后的两个列设为联合主键
         }
         
         public override void Down()
@@ -260,19 +260,61 @@ namespace FluentAPI
         }
     }
 
+  //同步至数据库后开始着手最后一条需求，即新建一个Cover类，并建立Course类与Cover类的一对一关系。首先我们建立一个Cover类，代码如下：
+  
+    public class Cover
+    {
+        public int Id { get; set; }
+        public Course Course { get; set; }
+    }
 
+  //同时也需要在Course类中插入Cover字段，代码如下：
+  
+    public class Course
+    {
+        //其他字段省略...
+        public Cover Cover { get; set; }
+    }
 
+  //到这里似乎已经声明了一个一对一关系。但是如果直接建立迁移文件的化会抛出异常，EntityFramework并不知道哪一个类是Principle，哪一个类是Dependent，
+    //我们需要在OnModelCreating()方法中对此经行声明才能完成创建。代码如下：
 
+            modelBuilder.Entity<Course>()   //以Course类为起始类，取得其引用
+                .HasRequired(c => c.Cover)    //一个Course只有一个Cover，所以调用HasRequired()方法
+                .WithRequiredPrincipal(c => c.Course);  //一个Cover只有一个Course，起始类Course为父母，所以调用WithRequiredPrincipal()方法
 
+  //如果反过来取Cover为起始类也是一样，代码如下：
 
+            modelBuilder.Entity<Cover>()   //以Cover类为起始类，取得其引用
+                .HasRequired(c => c.Course)    //一个Cover只有一个Course，所以调用HasRequired()方法
+                .WithRequiredDependent(c => c.Course);  //一个Course只有一个Cover，起始类Cover为子女，所以调用WithRequiredDependent()方法
 
+  //在PM中键入 add-migration CreatCourseToCoverOneToOneRelationship 建立迁移文件，自动生成代码如下：
 
+    public partial class CreatCourseToCoverOneToOneRelationship : DbMigration
+    {
+        public override void Up()
+        {
+            CreateTable(    //首先建立Covers表
+                "dbo.Covers",
+                c => new
+                    {
+                        Id = c.Int(nullable: false),    //Covers表只有一个列
+                    })
+                .PrimaryKey(t => t.Id)    //Id为主键
+                .ForeignKey("dbo.Courses", t => t.Id)   //Id也为外键，指向Courses
+                .Index(t => t.Id);    //将Id设为索引
+            
+        }
+        
+        public override void Down()
+        {
+            DropForeignKey("dbo.Covers", "Id", "dbo.Courses");
+            DropIndex("dbo.Covers", new[] { "Id" });
+            DropTable("dbo.Covers");
+        }
+    }
 
-
-
-
-
-
-
-
-
+  //同步至数据库后即可完成所有需求。以上为FluentAPI的实际运用演示。
+  
+//暂时想到这么多，最后更新2018/01/09
