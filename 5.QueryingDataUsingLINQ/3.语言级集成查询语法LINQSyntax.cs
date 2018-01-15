@@ -78,6 +78,33 @@
         //3
         //        C# Advanced   所有等级为Level3的课程名
 
-  //5.
+    //以上例子都与累计函数无关，即没有累计函数也可使用groupby。但如果我们要像SQL一样，查询每个Author出的课程总值为多少的表呢？这就需要用到累计函数，
+      //用法也很简单，代码和结果如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+
+            var qurey = from c in context.Courses
+                        group c by c.Author.Id    //以Author的Id列为基准分组，相同的Id分为一组
+                        into g
+                        select g;
+
+            foreach (var group in qurey)
+            {
+                //分组后，可以针对条目的属性调用任意方法来达到我们的查询目的，如累加同一组的FullPrice列值
+                //group类中还有其他累计函数，如Max()、Count()等，按需自取
+                Console.WriteLine("Author Id: {0}, Total Price: {1}", group.Key, group.Sum(c => c.FullPrice));    //调用group的Sum()函数
+            }
+        }
+
+      //输出结果为：
+
+        //Author Id: 1, Total Price: 167  Id为1的作者发起的课程总价为167
+        //Author Id: 2, Total Price: 397  Id为2的作者发起的课程总价为397
+        //Author Id: 3, Total Price: 45 Id为3的作者发起的课程总价为45
+        //Author Id: 4, Total Price: 170  Id为4的作者发起的课程总价为170
+
+  //5.结合Join。
 
 
