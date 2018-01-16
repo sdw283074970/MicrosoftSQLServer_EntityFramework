@@ -1,5 +1,5 @@
 //Q: LINQ语法可以实现哪些SQL的功能？
-//A: 几乎所有常用的功能包括Restriction。本篇仍然以上篇的Queries项目为基础示例。
+//A: 几乎所有常用的查询功能包括过滤、排序、投射、分组、结合等。本篇仍然以上篇的Queries项目为基础示例。
   //1.限制Restriction。即SQL语句中的WHERE语句。如项目要求找出所有AuthorId为1且级别为LEVEL1的课程，代码如下：
 
         static void Main(string[] args)
