@@ -6,7 +6,7 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses //LINQ语法总是以from起头，select结尾
+            var query = from c in context.Courses //LINQ语法总是以from起头，select结尾
                         where c.Level == 1 && c.Author.Id == 1    //where为限制关键词，等于SQL语句中的WHERE，&&等于SQL语句中的AND
                         select c;
         }
@@ -17,7 +17,7 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses 
+            var query = from c in context.Courses 
                         where c.Author.Id == 1
                         orderby c.Level descending, c.Name  //以多个元素为基准进行排列。默认为升序排列，降序需加上关键词descending
                         select c;
@@ -32,7 +32,7 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses 
+            var query = from c in context.Courses 
                         where c.Author.Id == 1
                         orderby c.Level descending, c.Name
                         select new { Name = c.Name, Author = c.Author.Id };   //将结果投射至一个属性只有Name和Author的匿名类
@@ -49,12 +49,12 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses
+            var query = from c in context.Courses
                         group c by c.Level    //以Level列为基准经行分组
                         into g    //g为在该查询的临时声明变量
                         select g;
 
-            foreach (var group in qurey)    //对组进行迭代输出，因为Level有3种所有输出有3个组
+            foreach (var group in query)    //对组进行迭代输出，因为Level有3种所有输出有3个组
             {
                 Console.WriteLine(group.Key);   //输出key值
 
@@ -85,12 +85,12 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses
+            var query = from c in context.Courses
                         group c by c.Author.Id    //以Author的Id列为基准分组，相同的Id分为一组
                         into g
                         select g;
 
-            foreach (var group in qurey)
+            foreach (var group in query)
             {
                 //分组后，可以针对条目的属性调用任意方法来达到我们的查询目的，如累加同一组的FullPrice列值
                 //group类中还有其他累计函数，如Max()、Count()等，按需自取
@@ -115,11 +115,11 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses
+            var query = from c in context.Courses
                         join a in context.Authors on c.AuthorId equals a.Id   //选择两个表中所有AuthorId等于Id的条目为结果
                         select new { AuthorName = a.Name, CourseName = c.Name };    //优化程序，将结果有用的部分投射到匿名类中
 
-            foreach (var x in qurey)  //迭代输出结果
+            foreach (var x in query)  //迭代输出结果
                 Console.WriteLine("{0} - {1}", x.CourseName, x.AuthorName);
         }
       
@@ -142,11 +142,11 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from c in context.Courses
+            var query = from c in context.Courses
                         //因为AuthorId为从Courses表指向Author表的外键的关系，我们可以直接通过调用Courses表来取得Authors表中的引用
                         select new { AuthorName = c.Author.Name, CourseName = c.Name };    //优化程序，将结果有用的部分投射到匿名类中
 
-            foreach (var x in qurey)  //迭代输出结果
+            foreach (var x in query)  //迭代输出结果
                 Console.WriteLine("{0} - {1}", x.CourseName, x.AuthorName);
         }//输出结果与上面是一样的
 
@@ -158,12 +158,12 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from a in context.Authors
+            var query = from a in context.Authors
                         join c in context.Courses on a.Id equals c.AuthorId
                         into g    //之前是标准的INNERJOIN，加上into后就变成GROUPJOIN，g为左表Authors的完全集
                         select new { AuthorName = a.Name, TotalPrice = g.Sum(c => c.FullPrice) };
 
-            foreach (var x in qurey)
+            foreach (var x in query)
                 Console.WriteLine("{0} - {1}", x.AuthorName, x.TotalPrice);
         }
 
@@ -182,11 +182,11 @@
         {
             var context = new PlutoContext();
 
-            var qurey = from a in context.Authors
+            var query = from a in context.Authors
                         from c in context.Courses   //CROSSJOIN直接两个from关键词走起，然后投射即可
                         select new { AuthorName = a.Name, CourseName = c.Name };
 
-            foreach (var x in qurey)    //迭代输出结果
+            foreach (var x in query)    //迭代输出结果
                 Console.WriteLine("{0} - {1}", x.AuthorName, x.CourseName);
         }
 
