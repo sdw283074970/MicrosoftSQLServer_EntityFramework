@@ -135,8 +135,8 @@
         //A 16 Hour C# Course with Visual Studio 2013 - Tom Owsiak
         //Learn JavaScript Through Visual Studio 2013 - Tom Owsiak
 
-      //以上为普通情况。如果两个表中有导向属性，即外键关系，则可不用关键词，直接输出结果。如Courses表和Authors表本来就有导航属性，即Courses表中
-        //的AuthorId字段直接指向了Authors表中的Id字段，则可直接输出以上需求，代码如下;
+      //以上为假设两表间没有关系的普通情况。如果两个表中有导向属性，即外键关系，则可不用关键词，直接输出结果。如Courses表和Authors表本来就有导航属性，
+        //即Courses表中的AuthorId字段直接指向了Authors表中的Id字段，则可直接输出以上需求，代码如下;
 
         static void Main(string[] args)
         {
