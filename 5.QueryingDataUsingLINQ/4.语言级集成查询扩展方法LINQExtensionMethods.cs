@@ -156,7 +156,8 @@
             }
         }
 
-    //输出结果：
+    //输出结果为：
+
       //AuthorName: Mosh Hamedani, TotalPrice: 167
       //AuthorName: Anthony Alicea, TotalPrice: 397
       //AuthorName: Eric Wise, TotalPrice: 45
@@ -214,15 +215,100 @@
         //A 16 Hour C# Course with Visual Studio 2013 - Tom Owsiak
         //Learn JavaScript Through Visual Studio 2013 - Tom Owsiak
 
-    //
+    //2）LINQ中的GROUP JOIN。基本上相当于SQL中的LEFTJOIN。通常，GROUPJOIN仅仅在要查询“主键对象-外键对象集合”的情况下使用，即以左表的唯一键作为
+      //等值连接右表的所有条目。如项目要查询每个作者发起的课程总价值，结果中要返回作者的名字(不是GROUPBY例子中的Id)和总价格。Authors表中的Id是
+      //唯一主键，与Courses表为一对多关系，所以这里适合用GROUPJOIN。代码如下：
 
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
 
+            var query = context.Authors   //以唯一键为分组条件的表为左表(类别)
+                .GroupJoin(context.Courses,     //左表唯一键的成员(集合)的表为右表
+                    a => a.Id,    //左表的唯一键
+                    c => c.AuthorId,    //左表唯一键作为外键连接的右表成员
+                    (Author, Courses) => new    //将有用的结果投射到匿名类中
+                           {    //由于左表某一作者没有出课程，导致他的课程名单为NULL值，NULL无法使用累计函数，需要特殊对待
+                             AuthorName = Author.Name, TotalPrice = Courses.Count() == 0 ? 0 : Courses.Sum(c => c.FullPrice) 
+                           });
 
+            foreach (var q in query)    //迭代输出结果
+            {
+                Console.WriteLine("{0} - {1}", q.AuthorName, q.TotalPrice);
+            }
+        }
 
+      //输出结果为：
 
+        //Mosh Hamedani - 167
+        //Anthony Alicea - 397
+        //Eric Wise - 45
+        //Tom Owsiak - 170
+        //John Smith - 0
 
+    //3）LINQ中的CROSS JOIN。与SQL的极其相似，但在LINQ中没有一个叫CrossJoin()的方法，用的是SelectMany()方法。如项目需求为Authors表与Courses表交
+      //叉集合，返回一切作者和书名的结合可能，代码和输出结果如下：
 
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
 
+            var query = context.Authors   //选择要交叉结合的第一个表
+                .SelectMany(a => context.Courses, (author, course) => new //使用扩展方法SelectMany()选择第二个表
+                {
+                    AuthorName = author.Name, CourseName = course.Name    //将有需要的属性投射到匿名类
+                });
 
+            foreach (var q in query)    //迭代输出
+                Console.WriteLine("{0} - {1}", q.AuthorName, q.CourseName);
+        }
 
+      //输出结果如下：
 
+        //Mosh Hamedani - C# Basics
+        //Mosh Hamedani - C# Intermediate
+        //Mosh Hamedani - C# Advanced
+        //Mosh Hamedani - Javascript: Understanding the Weird Parts
+        //Mosh Hamedani - Learn and Understand AngularJS
+        //Mosh Hamedani - Learn and Understand NodeJS
+        //Mosh Hamedani - Programming for Complete Beginners
+        //Mosh Hamedani - A 16 Hour C# Course with Visual Studio 2013
+        //Mosh Hamedani - Learn JavaScript Through Visual Studio 2013
+        //Anthony Alicea - C# Basics
+        //Anthony Alicea - C# Intermediate
+        //Anthony Alicea - C# Advanced
+        //Anthony Alicea - Javascript: Understanding the Weird Parts
+        //Anthony Alicea - Learn and Understand AngularJS
+        //Anthony Alicea - Learn and Understand NodeJS
+        //Anthony Alicea - Programming for Complete Beginners
+        //Anthony Alicea - A 16 Hour C# Course with Visual Studio 2013
+        //Anthony Alicea - Learn JavaScript Through Visual Studio 2013
+        //Eric Wise - C# Basics
+        //Eric Wise - C# Intermediate
+        //Eric Wise - C# Advanced
+        //Eric Wise - Javascript: Understanding the Weird Parts
+        //Eric Wise - Learn and Understand AngularJS
+        //Eric Wise - Learn and Understand NodeJS
+        //Eric Wise - Programming for Complete Beginners
+        //Eric Wise - A 16 Hour C# Course with Visual Studio 2013
+        //Eric Wise - Learn JavaScript Through Visual Studio 2013
+        //Tom Owsiak - C# Basics
+        //Tom Owsiak - C# Intermediate
+        //Tom Owsiak - C# Advanced
+        //Tom Owsiak - Javascript: Understanding the Weird Parts
+        //Tom Owsiak - Learn and Understand AngularJS
+        //Tom Owsiak - Learn and Understand NodeJS
+        //Tom Owsiak - Programming for Complete Beginners
+        //Tom Owsiak - A 16 Hour C# Course with Visual Studio 2013
+        //Tom Owsiak - Learn JavaScript Through Visual Studio 2013
+        //John Smith - C# Basics
+        //John Smith - C# Intermediate
+        //John Smith - C# Advanced
+        //John Smith - Javascript: Understanding the Weird Parts
+        //John Smith - Learn and Understand AngularJS
+        //John Smith - Learn and Understand NodeJS
+        //John Smith - Programming for Complete Beginners
+        //John Smith - A 16 Hour C# Course with Visual Studio 2013
+        //John Smith - Learn JavaScript Through Visual Studio 2013
+
+//暂时想到这么多，最后更新2018/01/17
