@@ -104,6 +104,124 @@
                 Console.WriteLine("TagName:{0}, TagId:{1}", q.Name, q.Id);
         }
 
+  //5.分组Grouping。在LINQ中我们用Group方法按照某个标准分类来分解表。可以理解为GroupBy()方法的返回类型为ICollection<Group<T>>，即列表中的列表。
+    //其中，Group<T>中的T类比原类多一个Key字段。同样，假设项目需求为将Courses表按照课程难度等级分类，并按难度类别输出查询结果。
+    //使用扩展方法的代码如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+            var query = context.Courses.GroupBy(c => c.Level);    //调用GroupBy()方法
+
+            foreach (var q in query)    //迭代输出结果，此处q为按条件被分解的表
+            {
+                Console.WriteLine("Level: {0}", q.Key);
+                foreach (var g in q)    //迭代输出结果，此处g为被分解表中的条目
+                {
+                    Console.WriteLine("        {0}", g.Name);
+                }
+            }
+        }
+
+    //输出结果为：
+
+      //Level: 1
+      //        C# Basics
+      //        Programming for Complete Beginners
+      //        A 16 Hour C# Course with Visual Studio 2013
+      //        Learn JavaScript Through Visual Studio 2013
+      //Level: 2
+      //        C# Intermediate
+      //        Javascript: Understanding the Weird Parts
+      //        Learn and Understand AngularJS
+      //        Learn and Understand NodeJS
+      //Level: 3
+      //        C# Advanced
+
+    //下面考虑累计函数的情况。在LINQ中累计函数并没有与GroupBy()方法绑定，所以其实考虑应用累计函数也不涉及到GroupBy()的使用，直接对结果进行操作即可。
+      //同样假设项目去要查询每个Author出的课程总值，这里要求输出Author的Name而不仅仅是AuthorId，则代码如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+            var query = context.Courses
+                .GroupBy(c => c.AuthorId);
+          
+            foreach (var q in query)    //迭代输出
+            {
+                var authorQuery = context.Authors   //我们只有AuthorId，要输出与AuthorId对应的AuthorName，还需要查询获取包括AuthorName的条目
+                    .Where(a => a.Id == q.Key);
+                foreach (var a in authorQuery)    //第二次迭代输出。authorQuery包括了AuthorName的条目，query包括了价格，即可完成输出
+                    Console.WriteLine("AuthorName: {0}, TotalPrice: {1}", a.Name, q.Sum(c => c.FullPrice));
+            }
+        }
+
+    //输出结果：
+      //AuthorName: Mosh Hamedani, TotalPrice: 167
+      //AuthorName: Anthony Alicea, TotalPrice: 397
+      //AuthorName: Eric Wise, TotalPrice: 45
+      //AuthorName: Tom Owsiak, TotalPrice: 170
+
+    //此外，我们注意到AuthorId是作为一个外键，一个导航来连接Courses表和Authors表，即Courses.AuthorId永远等于Authors.Id.可以利用这一点来直接通过
+      //导航来对外表等值的列进行分组。即在此例中，可以对Courses表按Author.Name进行分解打碎，其逻辑为Courses.AuthorId==Authors.Id==Authors.Name。
+      //这样我们就可以省略对Authors.Name的查询，直接通过Course.Author.Name获取AuthorName。其代码如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+
+            var query = context.Courses
+                .GroupBy(c => c.Author.Name);   //之间在Courses表中按Authors表中的Name进行分类打碎
+
+            foreach (var q in query)    //迭代输出，query.Key即为分组的种类，即AuthorName
+            {
+                Console.WriteLine("AuthorName: {0}, TotalPrice: {1}", q.Key, q.Sum(c => c.FullPrice));
+            }
+        }//输出结果与上相同
+
+  //5.结合Join。再提一下，LINQ中有三种JOIN方式分别为INNER JOIN、GROUP JOIN和CROSS JOIN。LINQ中的InnerJoin和CrossJoin与SQL中的很像，但在LINQ中
+    //使用GroupJoin有点像在SQL中使用LEFTJOIN。我们再次分开详解。
+
+    //1）LINQ中的INNERJOIN。在SQL中，INNER JOIN为两个表的交集，通常用在两个没有关系的表中，在LINQ中也一样。假设Courses表和Authors表没有外键联通的
+      //关系，项目需求为查询返回一张课程名和作者名在一起的表，格式为“课名 - 作者名”，我们就要用到INNER JOIN。代码和结果如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+
+            var query = context.Courses   //选择表1
+                .Join(context.Authors,    //选择表2
+                    c => c.AuthorId, //选择表1的列
+                    a => a.Id,    //选择表2的列，此处认为表1列的值等于表2列的值
+                    (Course, Author) => new { CourseName = Course.Name, AuthorName = Author.Name });//只要CourseName和AuthorName，所以投射
+
+            foreach (var q in query)    //迭代输出结果
+            {
+                Console.WriteLine("{0} - {1}", q.CourseName, q.AuthorName);
+            }
+        }
+
+      //Join()方法要求传递四个参数，分别是Join(Entity, Func<Course, T>, Func<Author, Int>, Func<Course, Author, TResult>)。
+      //输出结果为：
+
+        //C# Basics - Mosh Hamedani
+        //C# Intermediate - Mosh Hamedani
+        //C# Advanced - Mosh Hamedani
+        //Javascript: Understanding the Weird Parts - Anthony Alicea
+        //Learn and Understand AngularJS - Anthony Alicea
+        //Learn and Understand NodeJS - Anthony Alicea
+        //Programming for Complete Beginners - Eric Wise
+        //A 16 Hour C# Course with Visual Studio 2013 - Tom Owsiak
+        //Learn JavaScript Through Visual Studio 2013 - Tom Owsiak
+
+    //
+
+
+
+
+
+
+
 
 
 
