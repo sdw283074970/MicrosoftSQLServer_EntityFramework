@@ -150,9 +150,9 @@
                 Console.WriteLine("{0} - {1}", x.CourseName, x.AuthorName);
         }//输出结果与上面是一样的
 
-    //2）LINQ中的GROUP JOIN。相当于SQL中的LEFT JOIN，经常会在实际生产中配合累计函数查询结果。如，我们要查询每个作者发起的课程总价值，结果中要返回
-      //作者的名字(不是GROUPBY例子中的Id)和总价格，就要用到GROUP JOIN。其中，由于Authors表和Courses表为一对多的关系，Authors表应该为左表，Courses
-      //为右表，代码和结果如下：
+    //2）LINQ中的GROUP JOIN。基本上相当于SQL中的LEFTJOIN。通常，GROUPJOIN仅仅在要查询“主键对象-外键对象集合”的情况下使用，即以左表的唯一键作为
+      //等值连接右表的所有条目。如，我们要查询每个作者发起的课程总价值，结果中要返回作者的名字(不是GROUPBY例子中的Id)和总价格，就要用到GROUP JOIN。
+      //其中，由于Authors表和Courses表为一对多的关系，Authors表应该为左表，Courses为右表，代码和结果如下：
 
         static void Main(string[] args)
         {
