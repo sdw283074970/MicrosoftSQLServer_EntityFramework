@@ -1,5 +1,5 @@
 //Q: 什么是懒惰加载？
-//A: 懒惰加载(LazyLoading)指关系型的对象(RelatedObjects)不会立即加载，只有在有需要引用的时候才会再次执行查询并加载。如以下情况：
+//A: 懒惰加载(LazyLoading)又称延迟加载，指关系型的导航对象(RelatedObjects)不会立即加载，只有在有需要引用的时候才会再次执行查询并加载。如以下情况：
 
         static void Main(string[] args)
         {
@@ -7,12 +7,12 @@
 
             var course = context.Courses.Single(c => c.Id == 2);    //Single()方法导致此处执行一次查询，返回IQueryable<Course>类型的对象
 
-            //Tags为course的一个字段，当course有返回值的时候，Tags并没有，只是暂时挂起。如有需要，会重新为Tags集合专门执行查询
+            //Tags为course的一个导航属性，当course有返回值的时候，Tags并没有，只是暂时挂起。如有需要，会重新为Tags集合专门执行查询
             foreach (var t in course.Tags)    //Tags为一个集合，每一次迭代都会重新执行一次查询并加载Tags的值到内存中
                 Console.WriteLine(t.Name);
         }
 
-//Q: 如何启用懒惰加载？
+//Q: 如何启用和禁用懒惰加载？
 //A: 在相关字段的声明中添加virtual关键词即可。在上例中，如果我们要让Course类中的Tags集合采用懒惰加载，则只需要在Course类中的Tags字段声明中加入
   //virtual关键词。代码如下：
 
@@ -25,7 +25,25 @@
 
   //如此，当course被加载进内存时，Author和Tags都是没有值的，只有在需要这两个属性的时候才会再次执行查询并加载值到内存。
   
-  //另外可以对是否开启懒惰加载进行全局设置。
+  //如需禁用懒惰加载，直接删掉virtual修饰符即可。另外以更简单的方法为在Domain配置中对是否开启懒惰加载进行全局设置。代码如下：
+
+    public class PlutoContext : DbContext
+    {
+        public PlutoContext()
+            : base("name=PlutoContext")
+        {
+            this.Configuration.LazyLoadingEnabled = false;      //禁用懒惰加载，即无论导航属性是否有virtual修饰都不会激活懒惰加载
+        }
+
+        public virtual DbSet<Author> Authors { get; set; }
+        public virtual DbSet<Course> Courses { get; set; }
+        public virtual DbSet<Tag> Tags { get; set; }
+
+        protected override void OnModelCreating(DbModelBuilder modelBuilder)
+        {
+            modelBuilder.Configurations.Add(new CourseConfiguration());
+        }
+    }
 
 //Q: EF是如何实现懒惰加载的？
 //A: 在运行时，EF会创建一个Domain类的子类，在这里为Course的子类，叫CourseProxy。这个类会覆写所有带Virtual修饰的字段，简化代码如下：
@@ -47,5 +65,7 @@
     //将其一次性完全加载就非常消耗性能。这时我们可以使用懒惰加载将不用的关系型对象暂时挂起，有需要再执行查询加载；
   //2.在桌面程序中使用懒惰加载。整个本地资源都可以调用；
   //3.避免在Web程序中使用懒惰加载。这涉及到数据通信、服务器响应的问题。懒惰加载意味着每次迭代都会向服务器发送查询、 加载请求，可能会爆掉服务器。
+
+//写在最后：EntityFrameWork 7 已经不再支持懒惰加载。如需获得导航属性，只能通过贪婪加载(EagerLoading)或指定加载(ExplicityLoading)实现。
 
 //暂时想到这么多。最后更新2018/01/29
