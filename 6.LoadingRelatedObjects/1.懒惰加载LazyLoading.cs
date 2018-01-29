@@ -45,6 +45,9 @@
         }
     }
 
+//Q: 如果LazyLoadingEnabled设置为真但是又不在导航属性上加virtual修饰符，即默认情况，会发生什么？
+//A: 导航属性将总是为空。
+
 //Q: EF是如何实现懒惰加载的？
 //A: 在运行时，EF会创建一个Domain类的子类，在这里为Course的子类，叫CourseProxy。这个类会覆写所有带Virtual修饰的字段，简化代码如下：
 
