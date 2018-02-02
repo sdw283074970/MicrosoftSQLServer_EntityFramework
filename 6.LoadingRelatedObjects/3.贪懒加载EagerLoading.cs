@@ -37,5 +37,16 @@
         //单一属性多重查询
         context.Course.Include(c => c.Author.Address);
 
+  //如果我们想将集合属性中的导航属性一起贪婪加载，则需要用到Select()方法。代码如下：
+
         //多重属性(集合)多重查询
-        context.Course.Include(c => c.Tags.Select())
+        context.Course.Include(c => c.Tags.Select(t => t.Moderator));   //加载Course中的Tags以及Tag中的Moderator属性
+//Q: 贪婪加载可否一次加载多个多重关系的数据？
+//A: 可以。如Course有Author的导航属性，假设又有Cover的导航属性，如果我们全都要，则可以调用多次Include()方法。代码如下：
+
+        context.Course.Include(c => c.Author.Address)
+                      .Include(c => c.Cover);
+
+  //为了节约资源，请仅在100%确认会用到的情况下使用多重贪婪加载，否则肯能导致滥用。
+
+//暂时想到这么多，最后更新2018/02/01
