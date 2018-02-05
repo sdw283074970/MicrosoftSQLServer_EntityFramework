@@ -62,7 +62,7 @@
           
             //推荐方法
             //如果authorIds集合中包含了当前Course条目的AuthorId，且Course的价格为0，则将此条目返回。结果为IQueryable<Course>类型。
-            result = context.Courses.Where(c => authorIds.Contains(c.AuthorId) && c.FullPrice == 0).Load();
+            context.Courses.Where(c => authorIds.Contains(c.AuthorId) && c.FullPrice == 0).Load();
         }
 
 //暂时想到这么多，最后更新2018/02/04
