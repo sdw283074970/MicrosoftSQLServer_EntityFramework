@@ -46,7 +46,7 @@
         static void Main(string[] args)
         {
             var context = new VidzyContext();
-            var query = context.Videos.Include(v => v.Genre).ToList();    //插入Include()方法，使用第二个重载
+            var query = context.Videos.Include(v => v.Genre).ToList();    //插入Include()方法，使用第二个重载加载Genre的所有属性
 
             foreach (var q in query)
                 Console.WriteLine("Name: {0}, Genre: {1}", q.Name, q.Genre.Name);
