@@ -11,7 +11,6 @@
         static void Main(string[] args)
         {
             var context = new PlutoContext();
-
             var author = context.Authors.Single(a => a.Id == 2);    //获得Id为2的作者条目
           
             //MSDN方法
@@ -24,8 +23,7 @@
         static void Main(string[] args)
         {
             var context = new PlutoContext();
-
-            var course = context.Authors.Single(a => a.Id == 2);    //获得Id为2的作者条目
+            var author = context.Authors.Single(a => a.Id == 2);    //获得Id为2的作者条目
           
             //推荐方法
             context.Courses.Where(c => c.AuthorId == author.Id).Load();   //加载所有authorId为2的课程
@@ -38,11 +36,36 @@
         static void Main(string[] args)
         {
             var context = new PlutoContext();
-
-            var course = context.Authors.Single(a => a.Id == 2);    //获得Id为2的作者条目
+            var author = context.Authors.Single(a => a.Id == 2);
           
             //MSDN方法
-            context.Entry(author).Collection(a => a.Courses).Query().Where(c => c.FullPrice == 0).Load();
+            context.Entry(author).Collection(a => a.Courses).Query().Where(c => c.FullPrice == 0).Load();   //使用Query()方法进行条件查询
             //推荐方法
-            context.Courses.Where(c => c.AuthorId == author.Id && c.FullPrice == 0).Load();   //加载所有authorId为2的课程
+            context.Courses.Where(c => c.AuthorId == author.Id && c.FullPrice == 0).Load();   //只用加上Load()方法即为显示加载
         }
+
+  //两种方法孰优孰劣已经很清楚了，MSDN介绍的方法带有很多API，嘈杂难记；而推荐方法应用条件查询的原理进行显示加载，简明易懂。作为一个总结，推荐使用
+    //推荐方法进行显示加载，只用在末尾串联Load()方法即可。
+
+//Q: 既然MSDN方法不支持多重条目的显示加载，那如何使用推荐方法进行多重条目的显示加载？
+//A: 仍然以上例为例。假设项目需求为加载ID为1，2，3，4的作者的所有免费课程，在SQL中查询代码这么写：
+  
+  //SELECT * FROM Courses WHERE AuthorId IN (1, 2, 3, 4)
+
+  //我们只用为查找目标(ID)建立一个集合，将这个集合作为参数传入匿名表达式即可。代码如下：
+
+        static void Main(string[] args)
+        {
+            var context = new PlutoContext();
+            var authors = context.Authors.ToList();
+            var authorIds = authors.Select(a => a.Id);    //返回类型为IEnumerable<Int32>
+          
+            //推荐方法
+            //如果authorIds集合中包含了当前Course条目的AuthorId，且Course的价格为0，则将此条目返回。结果为IQueryable<Course>类型。
+            var result = context.Courses.Where(c => authorIds.Contains(c.AuthorId) && c.FullPrice == 0).Load();
+            
+            foreach (r in result)   //迭代输出结果的课程名
+                Console.WriteLine(r.Name);
+        }
+
+//暂时想到这么多，最后更新2018/02/04
