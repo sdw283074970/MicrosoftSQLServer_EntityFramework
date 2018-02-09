@@ -189,7 +189,7 @@ namespace Queries.Persistence
             return _context.SaveChanges();
         }
 
-        public void Dispose()   //声明Dispose()方法，用于释放链接资源
+        public void Dispose()   //填充Dispose()方法，用于释放链接资源。这个方法存在于IDisposable接口中。
         {
             _context.Dispose();
         }
