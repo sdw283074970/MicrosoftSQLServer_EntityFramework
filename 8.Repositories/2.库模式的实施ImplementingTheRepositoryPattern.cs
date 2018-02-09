@@ -93,7 +93,51 @@ namespace Queries.Core.Repositories
     }
 }
 
-  //接着针对具体项目的具体实体建立实体接口
+  //接着针对具体项目的具体实体建立实体接口ICourseRepository，该接口继承自IRepository<Course>接口，代码如下：
+  
+namespace Queries.Core.Repositories
+{
+    public interface ICourseRepository: IRepository<Course>
+    {
+        IEnumerable<Course> GetTopSellingCourses(int count);    //声明GetTopSellingCourses(count)方法
+        IEnumerable<Course> GetCoursesWithAuthors(int pageIndex, int pageSize);   //声明GetCoursesWithAuthors(count)方法
+    }
+}
+
+  //最后建立一个执行以上接口、继承自Repository类的具体实体类CourseRepository，代码如下：
+  
+namespace Queries.Core.Repositories
+{
+    public class CourseRepository : Repository<Course>, ICourseRepository
+    {
+        public CourseRepository(PlutoContext context)   //构造器，继承Repository<Course>的构造器
+            : base(context)
+        {
+        }
+
+        public PlutoContext PlutoContext    //声明一个PlutoContext字段
+        {
+            get { return Context as PlutoContext; }   //这里的Context继承自Repository<Course>类，在此上转型作为PlutoContext
+        }
+
+        public IEnumerable<Course> GetCoursesWithAuthors(int pageIndex, int pageSize = 10)    //填充GetCoursesWithAuthors()方法
+        {
+            return PlutoContext.Courses
+                .Include(c => c.Author)
+                .OrderBy(c => c.Name)
+                .Skip((pageIndex - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+        }
+
+        public IEnumerable<Course> GetTopSellingCourses(int count)    //填充GetTopSellingCourses()方法
+        {
+            return PlutoContext.Courses.OrderByDescending(c => c.FullPrice).Take(count).ToList();
+        }
+    }
+}
+
+  //至此，一个简单的库模式就建立完成。同样，我们可以建立其他实体的库，如IAuthorRepository和AuthorRepository等。
 
 //Q: 如何通过库模式写入更改数据库？
 //A: 如上节所说，需要使用工作单元UnitOfWork来实现。
@@ -122,19 +166,63 @@ namespace Queries.Core
         }
 
   //Complete()方法即与数据库沟通的方法，如可以在其中填充SaveChanges()方法等。
-  //在建立完IUnitOfWork接口后，我们就需要建立一个实施这个接口的类UnitOfWork。
+  //在建立完IUnitOfWork接口后，我们就需要建立一个实施这个接口的类UnitOfWork。代码如下：
 
+namespace Queries.Persistence
+{
+    public class UnitOfWork : IUnitOfWork   //实施IUnitOfWork接口
+    {
+        private readonly PlutoContext _context;
+        //通过访问以下字段可以访问实体
+        public IAuthorRepository Authors { get; private set; }    //填充IUnitOfWork中的字段，仅能在此类中对其赋值
+        public ICourseRepository Courses { get; private set; }    //填充IUnitOfWork中的字段，仅能在此类中对其赋值
 
+        public UnitOfWork(PlutoContext context)   //构造器
+        {
+            _context = context;
+            Authors = new AuthorRepository(_context);   //实例化AuthorRepository，将其传入Authors字段代表Author实体
+            Courses = new CourseRepository(_context);   //实例化CourseRepository，将其传入Courses字段代表Course实体
+        }
 
+        public int Complete()   //填充Complete()方法
+        {
+            return _context.SaveChanges();
+        }
 
+        public void Dispose()   //声明Dispose()方法，用于释放链接资源
+        {
+            _context.Dispose();
+        }
+    }
+}
 
+//Q: 如何通过库模式和工作单元来访问数据库？
+//A: 如之前所说，在以上库模式和工作单元建立好后，直接通过对工作单元的访问即可访问数据库。
 
+namespace Queries
+{
+    class Program
+    {
+        static void Main(string[] args)
+        {
+            using (var unitOfWork = new UnitOfWork(new PlutoContext()))   //使用using方法管理需要读取链接的命令，将会在结束时释放内存资源
+            {
+                // 查询Id为1的课程
+                var course = unitOfWork.Courses.Find(c => c.Id == 1);   //库封装了查询逻辑
 
+                // 将课程以作者姓名排序，查询前4个课程
+                var courses = unitOfWork.Courses.GetCoursesWithAuthors(1, 4);   //库封装了查询逻辑
 
+                // 删除Id为1的作者及其所有课程
+                var author = unitOfWork.Authors.GetAuthorWithCourses(1);    //库封装了查询逻辑
+                unitOfWork.Courses.RemoveRange(author.Courses);
+                unitOfWork.Authors.Remove(author);
+                unitOfWork.Complete();
+            }
+        }
+    }
+}
 
+  //以上就是库模式和工作单元的正确使用姿势。
 
-
-
-
-
-
+//暂时想到这么多，最后更新2018/02/09
