@@ -8,8 +8,8 @@
 
 * 阅读本教程的前置要求：
   - C#高级知识
-  - SQL基本知识
+  - SQL基本知识
   
 * The prerequisite of this tutorial:
   - C# Advanced knowledge
-  - Basic knowledge of SQL
+  - Basic knowledge of SQL
