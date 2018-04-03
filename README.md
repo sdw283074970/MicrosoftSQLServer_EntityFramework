@@ -1,19 +1,13 @@
-# 本repository为学习ADO.NET中EntityFramework(与Microsoft SQL Server链接)的笔记(教程)
+# MicrosoftSQLServer_EntityFramework
 
-目录（持续更新）
+* 这个仓库是我个人学习Entity Framework的笔记。
+* This repository is my personal note for MicrosoftSQLServer and EntityFramework learning.
 
-1.EF与SSMS简介
+* 这是一个系统化的笔记，也适合成为MicrosoftSQLServer和EntityFramework的学习教程。
+* This is a systemized note, and it iss also a good tutorial for Microsoft SQL Server and Entity Framework.
 
-2.EF数据库优先(DatabaseFirstWorkFlow)开发模式简述
-
-3.EF代码优先(CodeFirstWorkFlow)开发模式详解
-
-4.复写代码优先规则
-
-5.使用LINQ查询数据
-
-6.载入关联对象
-
-7.更新数据
-
-8.EF在实际应用程序中的应用
+* 阅读本教程的前置要求：
+  - C#高级知识
+  
+* The prerequisite of this tutorial:
+  - C# Advanced knowledge
