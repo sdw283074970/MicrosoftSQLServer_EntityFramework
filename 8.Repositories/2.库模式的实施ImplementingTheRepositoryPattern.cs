@@ -1,7 +1,10 @@
-//Q: 什么是库模式？
-//A: 库模式 RepositoryPattern 即是部署库来实现其带来的好处的具体实施。
+# 库模式的实施 Implementing The Repository Pattern
+本篇记录了如何实施库模式
 
-//Q: 如何实施库模式？
+### 什么是库模式？
+库模式`Repository Pattern`即是通过部署库来实现其带来的好处的具体执行。
+
+### 如何实施库模式？
 //A: 首先需要库的接口IRepository和实施这个接口的库类Repository，然后再建立一个为具体实体准备的继承IRepository接口的接口(如ICourseRepository)，
   //最后建立一个继承库类Repository的具体数据库类(如CourseRepository)，并在这个类中实施刚刚建立的具体接口(如ICourseRepository)，至此库模式搭建完成。
 
