@@ -11,4 +11,8 @@
   //CurrentValues(当前值)、OriginalValues(原始值)、Entity(实体对象)和Status(状态)。在Debug模式中可以很清楚的看到这些字段属性的变化。
   //值得介绍的是DbEntityEntry类有一个Reload()方法，这个方法是重新将这个对象的原始值加载到当前值中。
 
+//Q: 遇到“已有打开的与此 Command 相关联的 DataReader，必须首先将它关闭。”的错误应该怎么解决？
+//A: 两种办法。一种是設定ConnectionString加上MultipleActiveResultSets=true,但只適用於SQL 2005以後之版本。
+  //另一种是先讀出放置在List中。如：var speciesInDb = context.SpeciesInventories.Where(c => c.Id > 0).ToList();
+
 //暂时想到这么多，最后更新2018/02/07
